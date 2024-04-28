@@ -139,6 +139,7 @@ fun DogItem(dog: Dog, modifier: Modifier) {
             }
             if(expanded){
                 DogHobby(
+
                     dog.hobbies
                 )
             }
