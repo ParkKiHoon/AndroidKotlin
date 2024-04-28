@@ -7,7 +7,12 @@ import android.os.Bundle
 import android.provider.ContactsContract.Data
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.Spring.DampingRatioNoBouncy
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -59,9 +64,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -74,6 +81,8 @@ import androidx.compose.ui.semantics.Role.Companion.Switch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.example.woof.data.Dog
+import com.example.woof.data.dogs
 import java.text.NumberFormat
 import javax.sql.DataSource
 
@@ -87,14 +96,124 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DogItemButton()
+                    WoofApp()
                 }
             }
         }
     }
 }
+@Composable
+fun WoofApp() {
+    Scaffold(topBar = {
+            WoofTopAppBar()
+        }
+    ){
+        it->
+        LazyColumn(contentPadding = it) {
+            items(dogs){
+                DogItem(
+                    dog=it,modifier=Modifier.padding(8.dp)
+                )
+            }
+        }
+    }
+}
 
+@Composable
+fun DogItem(dog: Dog, modifier: Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+    Card(
+        modifier = modifier
+    ){
+        Column(
+            modifier= Modifier.animateContentSize(animationSpec = spring(Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
+        )) {
+            Row(modifier= Modifier
+                .fillMaxSize()
+                .padding(8.dp))
+            {
+                DogIcon(dog.imageResourceId)
+                DogInformation(dog.name,dog.age)
+                Spacer(Modifier.weight(1f))
+                DogItemButton(expanded = expanded, onClick = {expanded=!expanded})
+            }
+            if(expanded){
+                DogHobby(
+                    dog.hobbies
+                )
+            }
+        }
+    }
+}
 
+@Composable
+fun DogHobby(@StringRes dogHobby: Int) {
+    Column {
+        Text(
+            text= stringResource(id = R.string.about)
+        )
+        Text(
+            text= stringResource(dogHobby)
+        )
+    }
+}
+
+@Composable
+fun DogInformation(@StringRes dogName: Int, dogAge: Int ) {
+    Column {
+        Text(
+            text = stringResource(dogName),
+            style = MaterialTheme.typography.displayMedium,
+            modifier = Modifier.padding(16.dp)
+        )
+        Text(
+            text = stringResource(R.string.years_old, dogAge),
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+fun DogIcon(
+    @DrawableRes dogIcon: Int,
+    modifier: Modifier = Modifier
+) {
+    Image(
+        modifier = modifier
+            .size(182.dp)
+            .padding(8.dp)
+            .clip(MaterialTheme.shapes.small), // 이미지를 도형에 맞게 잘림 (현재는 원형)
+        contentScale = ContentScale.Crop,
+        painter = painterResource(dogIcon),
+        contentDescription = null
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WoofTopAppBar(modifier: Modifier = Modifier) {
+    CenterAlignedTopAppBar(
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .padding(8.dp),
+                    painter = painterResource(R.drawable.koda),
+
+                    contentDescription = null
+                )
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.displayLarge
+                )
+            }
+        },
+        modifier = modifier
+    )
+}
 @Composable
 private fun DogItemButton(
     expanded: Boolean,
